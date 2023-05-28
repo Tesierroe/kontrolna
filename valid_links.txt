@@ -1,0 +1,12 @@
+https://www.google.com.ua/imghp?hl=uk&tab=wi
+https://maps.google.com.ua/maps?hl=uk&tab=wl
+https://play.google.com/?hl=uk&tab=w8
+https://www.youtube.com/?tab=w1
+https://news.google.com/?tab=wn
+https://mail.google.com/mail/?tab=wm
+https://drive.google.com/?tab=wo
+https://www.google.com.ua/intl/uk/about/products?tab=wh
+http://www.google.com.ua/history/optout?hl=uk
+https://accounts.google.com/ServiceLogin?hl=uk&passive=true&continue=https://www.google.com/&ec=GAZAAQ
+http://www.google.com.ua/intl/uk/services/
+https://www.google.com/setprefdomain?prefdom=UA&amp;prev=https://www.google.com.ua/&amp;sig=K_YrAe9bkFWmj30d5WvtIoSRMRtjo%3D
