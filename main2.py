@@ -22,6 +22,8 @@ class FileAnalyzer:
                 file.write(link + '\n')
 
 
+
+
 class UrlAnalyzer(FileAnalyzer):
     def analyze_file(self):
         links = self.get_links_from_url(self.file_path)
@@ -139,3 +141,4 @@ if __name__ == "__main__":
         print('Checking if the link is valid...')
         analyzer = FileAnalyzer(file_path)
         analyzer.analyze_file()
+        analyzer.link_analyzer.process_links(links)
