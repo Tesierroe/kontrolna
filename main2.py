@@ -141,4 +141,4 @@ if __name__ == "__main__":
         print('Checking if the link is valid...')
         analyzer = FileAnalyzer(file_path)
         analyzer.analyze_file()
-        analyzer.link_analyzer.process_links(links)
+
