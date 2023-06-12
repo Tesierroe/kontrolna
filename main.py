@@ -1,66 +1,100 @@
 import argparse
 import requests
 import re
+import logging
+from PyPDF2 import PdfReader
+
+logging.basicConfig(level=logging.INFO)
 
 
-class UrlAnalyzer:
-    def __new__(cls, *args, **kwargs):
-        analyzer = super().__new__(cls)
-        if not args and not kwargs:
-            analyzer.url = cls.user_input
-        return analyzer
+class FileAnalyzer:
+    def __init__(self, file_path):
+        self.file_path = file_path
 
-    def __init__(self, url=None):
-        if url:
-            self.url = url
+    def analyze_file(self):
+        if self.file_path.endswith('.pdf'):
+            pdf_analyzer = PdfAnalyzer(self.file_path)
+            pdf_analyzer.analyze_file()
         else:
-            self.url = self.user_input()
-        self.link_analyzer = LinkAnalyzer(self.url)
+            url_analyzer = UrlAnalyzer(self.file_path)
+            url_analyzer.analyze_file()
+
+    def save_links(self, links, filename):
+        with open(filename, 'w+') as file:
+            for link in links:
+                file.write(link + '\n')
+
+
+class UrlAnalyzer(FileAnalyzer):
+    def analyze_file(self):
+        links = self.get_links_from_url(self.file_path)
+        self.process_links(links)
 
     @staticmethod
-    def user_input():
-        parse = argparse.ArgumentParser()
-        parse.add_argument('-url', type=str, help='You can set url for parsing')
-        args = parse.parse_args()
-        if args.url:
-            return args.url
-        else:
-            url = input('Please set full URL for parsing: ')
-            return url
-
-    def info_from_link(self):
-        self.link_analyzer.check_link(self.url)
-
-    def get_links_from_url(self, url) -> list:
-        response = requests.get(url)
-        if response.status_code == 200:
-            links = re.findall(r'href=[\'"]?([^\'" >]+)', response.text)
-            return links
-        else:
-            print(f'Failed to retrieve content from URL: {url}')
+    def get_links_from_url(url) -> list:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                links = re.findall(r'href=[\'"]?([^\'" >]+)', response.text)
+                return links
+            else:
+                logging.error(f'Failed to retrieve content from URL: {url}')
+                return []
+        except requests.exceptions.RequestException as e:
+            logging.error(f'An error occurred while accessing URL: {url}')
+            logging.error(e)
             return []
 
-
-class LinkAnalyzer:
-    def __init__(self, url):
-        self.url = url
-
-    def check_link(self, link):
+    @staticmethod
+    def check_link(link):
         try:
-            get = requests.get(link)
-            if get.status_code == 200:
+            response = requests.get(link)
+            if response.status_code == 200:
                 print(f'Yep, the link {link} is valid')
                 return True
             else:
-                print(f'The link {link} is NOT valid')
+                logging.info(f'The link {link} is NOT valid')
                 return False
-        except requests.exceptions.MissingSchema:
-            print(f'The link {link} is NOT valid')
+        except requests.exceptions.RequestException:
+            logging.info(f'The link {link} is NOT valid')
             return False
 
-    def check_links(self, links):
+    def process_links(self, links):
+        valid_links = []
+        broken_links = []
         for link in links:
-            self.check_link(link)
+            if self.check_link(link):
+                valid_links.append(link)
+            else:
+                broken_links.append(link)
+        self.save_links(valid_links, 'valid_links.txt')
+        self.save_links(broken_links, 'broken_links.txt')
+
+    def save_links(self, links, filename):
+        with open(filename, 'w+') as file:
+            for link in links:
+                file.write(link + '\n')
+
+
+class PdfAnalyzer(FileAnalyzer):
+    def analyze_file(self):
+        links = self.get_links_from_pdf(self.file_path)
+        self.process_links(links)
+
+    @staticmethod
+    def get_links_from_pdf(pdf_path) -> list:
+        links = []
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PdfReader(file)
+            num_pages = len(pdf_reader.pages)
+            for page_num in range(num_pages):
+                page = pdf_reader.pages[page_num]
+                page_text = page.extract_text()
+                page_links = re.findall(
+                    r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', page_text
+                )
+                links.extend(page_links)
+        return links
 
     def process_links(self, links):
         valid_links = []
@@ -74,19 +108,39 @@ class LinkAnalyzer:
         self.save_links(broken_links, 'broken_links.txt')
 
     @staticmethod
-    def save_links(links, filename):
+    def check_link(link):
+        try:
+            response = requests.get(link)
+            if response.status_code == 200:
+                print(f'Yep, the link {link} is valid')
+                return True
+            else:
+                logging.info(f'The link {link} is NOT valid')
+                return False
+        except requests.exceptions.RequestException:
+            logging.info(f'The link {link} is NOT valid')
+            return False
+
+    def save_links(self, links, filename):
         with open(filename, 'w+') as file:
             for link in links:
                 file.write(link + '\n')
 
 
 if __name__ == "__main__":
-    analyzer = UrlAnalyzer()
-    print('Checking if the link is valid ..')
-    analyzer.info_from_link()
-    print('----------------------------------')
+    parser = argparse.ArgumentParser(prog='file_analyzer', description='Tool for analyzing links in a PDF file or URL')
+    parser.add_argument('-url', type=str, help='You can set URL for parsing')
+    parser.add_argument('-pdf', type=str, help='Path to the PDF file')
+    args = parser.parse_args()
 
-    print(f'Checking all links in {analyzer.url}')
-    links = analyzer.get_links_from_url(analyzer.url)
-    analyzer.link_analyzer.check_links(links)
-    analyzer.link_analyzer.process_links(links)
+    if args.url:
+        analyzer = UrlAnalyzer(args.url)
+        analyzer.analyze_file()
+    elif args.pdf:
+        analyzer = PdfAnalyzer(args.pdf)
+        analyzer.analyze_file()
+    else:
+        file_path = input('Please set the full URL or path to the PDF file for parsing: ')
+        print('Checking if the link is valid...')
+        analyzer = FileAnalyzer(file_path)
+        analyzer.analyze_file()
