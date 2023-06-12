@@ -22,8 +22,6 @@ class FileAnalyzer:
                 file.write(link + '\n')
 
 
-
-
 class UrlAnalyzer(FileAnalyzer):
     def analyze_file(self):
         links = self.get_links_from_url(self.file_path)
@@ -89,7 +87,7 @@ class PdfAnalyzer(FileAnalyzer):
             for page_num in range(num_pages):
                 page = pdf_reader.pages[page_num]
                 page_text = page.extract_text()
-                page_links = re.findall(r'href=[\'"]?([^\'" >]+)', page_text)
+                page_links = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', page_text)
                 links.extend(page_links)
         return links
 
