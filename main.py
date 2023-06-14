@@ -125,20 +125,22 @@ class PdfAnalyzer(FileAnalyzer):
                 file.write(link + '\n')
 
 
-if __name__ == "__main__":
+def get_file_path():
     parser = argparse.ArgumentParser(prog='file_analyzer', description='Tool for analyzing links in a PDF file or URL')
     parser.add_argument('-url', type=str, help='You can set URL for parsing')
     parser.add_argument('-pdf', type=str, help='Path to the PDF file')
     args = parser.parse_args()
 
     if args.url:
-        analyzer = UrlAnalyzer(args.url)
-        analyzer.analyze_file()
+        return args.url
     elif args.pdf:
-        analyzer = PdfAnalyzer(args.pdf)
-        analyzer.analyze_file()
+        return args.pdf
     else:
-        file_path = input('Please set the full URL or path to the PDF file for parsing: ')
-        print('Checking if the link is valid...')
-        analyzer = FileAnalyzer(file_path)
-        analyzer.analyze_file()
+        return input('Please set the full URL or path to the PDF file for parsing: ')
+
+
+if __name__ == "__main__":
+    file_path = get_file_path()
+    print('Checking if the link is valid...')
+    analyzer = FileAnalyzer(file_path)
+    analyzer.analyze_file()
