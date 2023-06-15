@@ -5,7 +5,6 @@ import pytest
 import requests
 from main import FileAnalyzer
 
-
 # from main import get_file_path, file_path
 # from functions import check_link_with_mail
 # from functions import read_links_from_file
@@ -14,6 +13,7 @@ from main import FileAnalyzer
 # from functions import count_links_in_file
 # from functions import get_links_from_file
 # from functions import link_contains_uppercase
+
 
 # def setup_class():
 #     file_path = get_file_path()
