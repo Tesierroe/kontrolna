@@ -2,22 +2,19 @@ import logging
 import os
 
 import pytest
-import requests
-from main import FileAnalyzer
+from work import FileAnalyzer
 
-# from main import get_file_path, file_path
-# from functions import check_link_with_mail
-# from functions import read_links_from_file
-# from functions import get_response_status_code
-# from functions import check_if_links_exist
-# from functions import count_links_in_file
-# from functions import get_links_from_file
-# from functions import link_contains_uppercase
+from tests.functions import check_link_with_mail, read_links_from_file, get_response_status_code, \
+    check_if_links_exist, count_links_in_file, get_links_from_file, link_contains_uppercase
 
 
-# def setup_class():
-#     file_path = get_file_path()
-#     print(file_path)
+# Test for the absence of an empty link or path
+@pytest.mark.regression
+def test_non_empty_link_or_path():
+    file_path = "https://google.com"
+    FileAnalyzer(file_path)
+
+    assert file_path.strip() != ""
 
 
 # Test for the existence of 'valid_links.txt' and 'broken_links.txt' files
@@ -29,12 +26,6 @@ def test_files_are_created():
 
     assert os.path.exists("valid_links.txt")
     assert os.path.exists("broken_links.txt")
-
-    # Clean up the created files
-    os.remove("valid_links.txt")
-    os.remove("broken_links.txt")
-    logging.info('\nTC session files are cleared \n')
-
 
 
 # Test for the presence of at least one link in 'valid_links.txt' and 'broken_links.txt' files
@@ -52,34 +43,14 @@ def test_link_presence():
         broken_links = file.readlines()
         assert len(broken_links) >= 1
 
-    # Clean up the created files
-    os.remove("valid_links.txt")
-    os.remove("broken_links.txt")
-
-
 
 # Tests for the presence of a link with 'mail' in 'valid_links.txt' or 'broken_links.txt' files
-
 def test_link_with_mail():
     file_path = "https://google.com"
     analyzer = FileAnalyzer(file_path)
     analyzer.analyze_file()
 
     assert check_link_with_mail("valid_links.txt") or check_link_with_mail("broken_links.txt")
-
-    # Clean up the created files
-    os.remove("valid_links.txt")
-    os.remove("broken_links.txt")
-
-
-def check_link_with_mail(filename):
-    with open(filename, "r") as file:
-        links = file.readlines()
-        for link in links:
-            if "mail" in link:
-                print(f'This is the link I need {link}')
-        return 'No such links'
-
 
 
 # Test for 'valid_links.txt' containing only links with response status code 200
@@ -94,24 +65,6 @@ def test_valid_links_with_status_code_200():
 
     assert all(code == 200 for code in status_codes)
 
-    # Clean up the created files
-    os.remove("valid_links.txt")
-
-
-def read_links_from_file(filename):
-    with open(filename, "r") as file:
-        links = file.readlines()
-        return [link.strip() for link in links]
-
-
-def get_response_status_code(link):
-    try:
-        response = requests.get(link)
-        return response.status_code
-    except requests.exceptions.RequestException:
-        return None
-
-
 
 # Test for the absence of any links in 'valid_links.txt' or 'broken_links.txt' files
 @pytest.mark.regression
@@ -123,25 +76,8 @@ def test_no_links_saved():
     assert not check_if_links_exist("valid_links.txt")
     assert not check_if_links_exist("broken_links.txt")
 
-    # Clean up the created files
-    os.remove("valid_links.txt")
-    os.remove("broken_links.txt")
 
-
-def check_if_links_exist(filename):
-    return os.path.isfile(filename) and os.path.getsize(filename) > 0
-
-
-
-# Test for the absence of an empty link or path
-@pytest.mark.regression
-def test_non_empty_link_or_path():
-    file_path = "https://google.com"
-    FileAnalyzer(file_path)
-
-    assert file_path.strip() != ""
-
-
+# Test for the valid ending of the link or path
 def test_link_or_path_ending():
     file_path = "https://google.com"
     FileAnalyzer(file_path)
@@ -162,16 +98,6 @@ def test_sum_of_saved_links():
     assert valid_links_count + broken_links_count > 10
     print(valid_links_count + broken_links_count)
 
-    # Clean up the created files
-    os.remove("valid_links.txt")
-    os.remove("broken_links.txt")
-
-
-def count_links_in_file(filename):
-    with open(filename, 'r') as file:
-        return sum(1 for _ in file)
-
-
 
 # Test for the absence of uppercase letters in the links of 'broken_links.txt' file
 @pytest.mark.regression
@@ -181,24 +107,7 @@ def test_links_lowercase():
     analyzer.analyze_file()
 
     broken_links = get_links_from_file("broken_links.txt")
-
     assert not any(link_contains_uppercase(broken_links))
-
-    # Clean up the created files
-    os.remove("valid_links.txt")
-    os.remove("broken_links.txt")
-
-
-def get_links_from_file(filename):
-    with open(filename, 'r') as file:
-        return file.read().splitlines()
-
-
-def link_contains_uppercase(links):
-    for link in links:
-        if any(char.isupper() for char in link):
-            yield link
-
 
 
 # Test for the absence of duplicate links in 'valid_links.txt' and 'broken_links.txt' files
@@ -214,12 +123,8 @@ def test_no_duplicate_links():
     assert len(valid_links) == len(set(valid_links))
     assert len(broken_links) == len(set(broken_links))
 
-    # Clean up the created files
+
+def teardown(self):
     os.remove("valid_links.txt")
     os.remove("broken_links.txt")
-
-
-# def teardown_class(self):
-#     os.remove("valid_links.txt")
-#     os.remove("broken_links.txt")
-#     logging.info('\nTC session files are cleared \n')
+    logging.info('\nTC session files are cleared \n')

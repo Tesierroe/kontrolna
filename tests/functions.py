@@ -1,8 +1,6 @@
 import os
 import requests
 
-# не виходить заімпортити усі функції
-# ModuleNotFoundError: No module named 'functions'
 
 def check_link_with_mail(filename):
     with open(filename, "r") as file:
